@@ -4,6 +4,8 @@ const isTextNode = element => element !== null && element.indexOf('<') === -1
 const isCloseElement = element => element.indexOf('</') !== -1
 const isOpenElement = element => element.indexOf('>') !== -1 && element.indexOf('/>') === -1
 const isSelfCloseElement = element => element !== null && element.indexOf('/>') !== -1
+const isOpenComponent = element => element !== null && /(<[A-Z])/.test(element) && element.indexOf('/>') === -1
+
 const getElementName = str => {
   const spaceIndex = str.indexOf(' ')
   const hasSpace = spaceIndex !== -1
@@ -17,9 +19,25 @@ const getProps = element => {
   propsArray.forEach((prop, index) => (index % 2 === 0) && (props[prop.trim()] = getProp(propsArray[index + 1])))
   return props
 }
-export const createTree = html => {
+const createNode = (element, Components) => {
+  const props = isTextNode(element) ? ({ nodeValue: element })  : getProps(element)
+  if (isOpenComponent(element)) {
+    return Components[getElementName(element)](props)
+  }
+
+  const node = {
+    debug: element,
+    type: isTextNode(element) ? 'text' : getElementName(element),
+    props: {
+      children: [],
+      ...props,
+    }
+  }
+  return node
+}
+export const createTree = (html, Components) => {
   const elements = getElements(html)
-  const rootElement = { type: 'root', props: {}, children: [] }
+  const rootElement = { type: 'root', props: { children: [] } }
   const stack = [rootElement]
   let elementIndex = 0
   
@@ -29,25 +47,21 @@ export const createTree = html => {
     const isEmptyNode = element.trim() === ''
     if (isEmptyNode) continue
 
-    const node = {
-      type: isTextNode(element) ? 'text' : getElementName(element),
-      children: [],
-      props: isTextNode(element) ? ({ nodeValue: element }) : getProps(element),
-    }    
-    
-    if (isSelfCloseElement(element) || isTextNode(element)) {
-      parent.children.push(node)
-      continue
-    }
-    
     if (isCloseElement(element)) {
       stack.pop()
       parent = stack[stack.length - 1]
       continue
     }
+
+    const node = createNode(element, Components)
+    
+    if (isSelfCloseElement(element) || isTextNode(element)) {
+      parent.props.children.push(node)
+      continue
+    }
     
     if (isOpenElement(element)) {
-      parent.children.push(node)
+      parent.props.children.push(node)
       stack.push(node)
       continue
     }
@@ -55,7 +69,6 @@ export const createTree = html => {
     
   }  
   console.log(JSON.stringify(stack[0], null, 2))
-  return stack[0].children[0] // ignore root container
+  return stack[0].props.children[0] // ignore root container
 }
 
-createTree('<div><h1>hello<b>a</b></h1></div>')
