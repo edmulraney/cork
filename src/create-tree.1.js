@@ -29,20 +29,13 @@ const getProps = element => {
   console.log('getProps', 'created props:', props, 'element:', element)
   return props
 }
-const createNode = (element, Components) => {
+const createNode = (element, fragment) => {
   const props = isTextNode(element) ? ({ nodeValue: element }) : getProps(element)
-  console.log('createNode', element, isComponent(element))
+  console.log('createNode', fragment, isComponent(element))
   
-  if (isComponent(element) && Components && Components[getElementName(element)]) {
-    // return Components[getElementName(element)](props)
-    return {
-      debug: element,
-      type: Components[getElementName(element)],
-      props: {
-        ...props,
-        children: []
-      }
-    }
+  if (isComponent(element)) {
+    console.log('aaa',getElementName(element))
+    return fragment.components[getElementName(element)](props)
   }
 
   const node = {
@@ -56,9 +49,9 @@ const createNode = (element, Components) => {
   console.log('createNode', {node})
   return node
 }
-
-export const createTree = (html, Components) => {
-  const elements = getElements(html)
+export const createTree = (fragment) => {
+  console.log('CT', fragment)
+  const elements = getElements(fragment.html)
   console.log('createTree', {elements})
   const rootElement = { type: 'root', props: { children: [] } }
   const stack = [rootElement]
@@ -75,7 +68,8 @@ export const createTree = (html, Components) => {
       parent = stack[stack.length - 1]
       continue
     }
-    const node = createNode(element, Components)
+
+    const node = createNode(element, fragment)
     
     if (isSelfCloseElement(element) || isTextNode(element)) {
       parent.props.children.push(node)

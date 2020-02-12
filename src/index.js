@@ -6,6 +6,15 @@ const hasComponent = html => /(<[A-Z])/.test(html)
 let depth = 0
 const render = (root, container) => {
   depth++
+  console.log('render', root)
+  if (typeof root.type === 'function') {
+    console.log('RENDERING COMPONENT')
+    // const cx = (root.type(root.props))
+    // console.log({cx})
+    // return render(cx, container)
+    root = root.type(root.props)
+  }
+  console.log('past root type', root)
   const domElement =
     root.type == 'text'
       ? document.createTextNode('')
@@ -31,8 +40,6 @@ const render = (root, container) => {
   root.props.children.forEach(child => render(child, domElement))
   container.appendChild(domElement)
 }
-internal.refs = {}
-internal.refIndex = 0
 
 const toStatic = (statics, dynamics) => {
   console.log('toStatic', {statics, dynamics})
@@ -41,6 +48,15 @@ const toStatic = (statics, dynamics) => {
     const dynamicPart = dynamics[index]
     result += staticPart
     
+    // if (Array.isArray(dynamicPart)) { 
+    //   console.log('ISARRAY')
+    //   if ( typeof dynamicPart.type === 'function') {
+    //   console.log('TYPEIT')
+
+    //     result += dynamicPart.map(dynamicPat.type(dynamicPart.props))
+    //   }
+    // }
+
     if (staticPart.endsWith('="')) {
       console.log('toStatic', 'dynamic prop', {staticPart, dynamicPart})
       const propIndex = internal.addProp(dynamicPart)
@@ -50,11 +66,6 @@ const toStatic = (statics, dynamics) => {
       console.log('toStatic', 'dynamic content:', {staticPart, dynamicPart})
       result += dynamicPart
     }
-    else if (Array.isArray(dynamicPart)) {
-      console.log('storing dynamicPart for later', dynamicPart)
-      internal.refs[++internal.refIndex] = dynamicPart
-      result += `refs[${internal.refIndex}]`
-    }
   }
   console.log({result})
   return result
@@ -63,79 +74,22 @@ const toStatic = (statics, dynamics) => {
 const html = (statics, ...dynamics) => {
   const parsed = toStatic(statics, dynamics)
   console.log('html', parsed, hasComponent(parsed))
-  if (!hasComponent(parsed)) return createTree(parsed)
-  return (...Components) => {
-    const components = Components.reduce((factories, factory) => ({ ...factories, [factory.name]: factory } ), {})
-    console.log('html', {components})
-    return createTree(parsed, components)
-  }
+  return createTree(parsed)
+}
+
+const html2 = (statics, ...dynamics) => (...Components) => {
+  const parsed = toStatic(statics, dynamics)
+  const components = Components.reduce((factories, factory) => ({ ...factories, [factory.name]: factory } ), {})
+  console.log('html2', {components})
+  return createTree(parsed, components)
 }
 
 // function Title (props) { return html`<h1>${props.children}</h1>` }
-function Title2 (props) { return html`<h1 onClick="${() => console.log(123)}" id="a" id2="asdf">${props.title}</h1>` }
+// function Title2 (props) { return html`<h1 onClick="${() => console.log(123)}" id="a" id2="asdf">${props.title}</h1>` }
 
-// const test = html`<div>hello</div>`
-// const test2 = html`<div><h1>hihi</h1></div>`
-// const test2 = html`<div><Title2 title="${'heyt'}" /></div>`(Title2)
-// const test3 = html`<div><Title><b>bb</b><Title2 title="hihi" /></Title></div>`(Title, Title2)
 // const test = html`<ul>${[1,2,3].map(x => html`<li>${x}</li>`)}</ul>`
 // console.log(test)
-// console.log(test3)
 // render(test, document.getElementById('app'))
-/*
-`<div><Title>hello</Title></div>`
----
-html()
-->
-createTree()
-{
-  "type": "div",
-  "props": {
-    "children": [
-      {
-        "type": Title,
-        "props": {
-          "children": [
-            {
-              "type": "text",
-              "props": {
-                "nodeValue": "hihi",
-                "children": []
-              }
-            }
-          ]
-        }
-      }
-    ]
-  }
-}
-expandTree()
-{
-  "type": "div",
-  "props": {
-    "children": [
-      {
-        "type": "h1",
-        "props": {
-          "children": [
-            {
-              "type": "text",
-              "props": {
-                "nodeValue": "hihi",
-                "children": []
-              }
-            }
-          ]
-        }
-      }
-      }
-    ]
-  }
-}
----
-tree[0].appendChild(tree[0].children[0...])
----
-*/
 
 const TodoItem = props => {
   console.log('TodoItem', props)
@@ -144,16 +98,16 @@ const TodoItem = props => {
 
 const TodoList = props => {
   console.log('TodoList', props)
-  return html`
+  return html2`
     <ul>
-      ${props.todos.map(todo => html`<TodoItem todo="${todo}" />`(TodoItem))}
-    </ul>`
+      ${props.todos.map(todo => html`<TodoItem todo="${todo}" />`)}
+    </ul>`(TodoItem)
 }
 
 const TodoFeature = props => {
   const todos = [{title: 'test123'}]
   // const todos = useState([])
-  return html`
+  return html2`
     <div>
       <div>Todos</div>
       <TodoList todos="${todos}" />
@@ -162,7 +116,7 @@ const TodoFeature = props => {
 }
 
 const App = props => {
-  return html`
+  return html2`
     <div>
       <div>AppTitle</div>
       <TodoFeature />
@@ -170,4 +124,4 @@ const App = props => {
   `(TodoFeature)
 }
 
-render(html`<App />`(App), document.getElementById('app'))
+render(html2`<App />`(App), document.getElementById('app'))
