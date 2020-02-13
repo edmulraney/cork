@@ -4,16 +4,41 @@ import { internal } from './internal.js'
 const hasComponent = html => /(<[A-Z])/.test(html)
 
 let depth = 0
-const render = (root, container) => {
-  depth++
-  console.log('render', root)
-  if (typeof root.type === 'function') {
-    console.log('RENDERING COMPONENT')
-    // const cx = (root.type(root.props))
-    // console.log({cx})
-    // return render(cx, container)
-    root = root.type(root.props)
+
+function reconcile(root) {
+  const type = root.type
+  if (Array.isArray(root)) {
+    return root.map((child) = reconcile(child))
   }
+    console.log(root, type)
+  const Comp = typeof type === 'string' ? root : type(root.props)
+  if (Comp.props && Comp.props.children) {
+    Comp.props.children.forEach((child, idx) => {
+      if (typeof child.type !== 'string') {
+        Comp.props.children[idx] = reconcile(Comp.props.children[idx])
+      }
+    })
+  }
+  return Comp
+}
+
+const render = (root1, container) => {
+  depth++
+  console.log('render', root1)
+  // debugger
+  const tree = depth === 1 ? createTree(root1) : root1
+  // debugger
+  console.log('render tree', tree)
+  const root = reconcile(tree)
+  // const root =tree
+
+  // if (typeof root.type === 'function') {
+  //   console.log('RENDERING COMPONENT')
+  //   // const cx = (root.type(root.props))
+  //   // console.log({cx})
+  //   // return render(cx, container)
+  //   root = root.type(root.props)
+  // }
   console.log('past root type', root)
   const domElement =
     root.type == 'text'
@@ -66,6 +91,9 @@ const toStatic = (statics, dynamics) => {
       console.log('toStatic', 'dynamic content:', {staticPart, dynamicPart})
       result += dynamicPart
     }
+    else if (Array.isArray(dynamicPart)) {
+      result += dynamicPart.join('')
+    }
   }
   console.log({result})
   return result
@@ -74,7 +102,7 @@ const toStatic = (statics, dynamics) => {
 const html = (statics, ...dynamics) => {
   const parsed = toStatic(statics, dynamics)
   console.log('html', parsed, hasComponent(parsed))
-  return createTree(parsed)
+  return (parsed)
 }
 
 const html2 = (statics, ...dynamics) => (...Components) => {
@@ -87,41 +115,41 @@ const html2 = (statics, ...dynamics) => (...Components) => {
 // function Title (props) { return html`<h1>${props.children}</h1>` }
 // function Title2 (props) { return html`<h1 onClick="${() => console.log(123)}" id="a" id2="asdf">${props.title}</h1>` }
 
-// const test = html`<ul>${[1,2,3].map(x => html`<li>${x}</li>`)}</ul>`
+const test = html`<ul>${[1,2,3].map(x => html`<li>${x}</li>`)}</ul>`
 // console.log(test)
-// render(test, document.getElementById('app'))
+render(test, document.getElementById('app'))
 
-const TodoItem = props => {
-  console.log('TodoItem', props)
-  return html`<li>${props.todo.title}</li>`
-}
+// const TodoItem = props => {
+//   console.log('TodoItem', props)
+//   return html`<li>${props.todo.title}</li>`
+// }
 
-const TodoList = props => {
-  console.log('TodoList', props)
-  return html2`
-    <ul>
-      ${props.todos.map(todo => html`<TodoItem todo="${todo}" />`)}
-    </ul>`(TodoItem)
-}
+// const TodoList = props => {
+//   console.log('TodoList', props)
+//   return html2`
+//     <ul>
+//       ${props.todos.map(todo => html2`<TodoItem todo="${todo}" />`(TodoItem))}
+//     </ul>`
+// }
 
-const TodoFeature = props => {
-  const todos = [{title: 'test123'}]
-  // const todos = useState([])
-  return html2`
-    <div>
-      <div>Todos</div>
-      <TodoList todos="${todos}" />
-    </div>
-  `(TodoList)
-}
+// const TodoFeature = props => {
+//   const todos = [{title: 'test123'}]
+//   // const todos = useState([])
+//   return html2`
+//     <div>
+//       <div>Todos</div>
+//       <TodoList todos="${todos}" />
+//     </div>
+//   `(TodoList)
+// }
 
-const App = props => {
-  return html2`
-    <div>
-      <div>AppTitle</div>
-      <TodoFeature />
-    </div>
-  `(TodoFeature)
-}
+// const App = props => {
+//   return html2`
+//     <div>
+//       <div>AppTitle</div>
+//       <TodoFeature />
+//     </div>
+//   `(TodoFeature)
+// }
 
-render(html2`<App />`(App), document.getElementById('app'))
+// render(html2`<App />`(App), document.getElementById('app'))
