@@ -32,15 +32,15 @@ const getProps = element => {
 const createNode = (element, Components) => {
   const props = isTextNode(element) ? ({ nodeValue: element }) : getProps(element)
   console.log('createNode', element, isComponent(element))
-  
+  console.log('HERE', element, isComponent(element), Components[getElementName(element)])
   if (isComponent(element) && Components && Components[getElementName(element)]) {
     // return Components[getElementName(element)](props)
     return {
       debug: element,
       type: Components[getElementName(element)],
       props: {
+        children: [],
         ...props,
-        children: []
       }
     }
   }
@@ -57,13 +57,22 @@ const createNode = (element, Components) => {
   return node
 }
 
-export const createTree = (html, Components) => {
+export const createTree = (html) => {
   const elements = getElements(html)
   console.log('createTree', {elements})
   const rootElement = { type: 'root', props: { children: [] } }
   const stack = [rootElement]
   let elementIndex = 0
-  
+  let components = null
+
+  const componentsIndex = elements[0].indexOf('__components__[')
+  if (componentsIndex !== -1) {
+    const id = elements[0].substring(elements[0].indexOf('[') + 1, elements[0].indexOf(']'))
+    console.log({ id})
+    components = elements[0].components[Number(id)]
+    console.log(''.components, {components})
+    elements.shift()
+  }
   while (elementIndex !== elements.length) {
     let parent = stack[stack.length - 1]
     const element = elements[elementIndex++]
@@ -75,7 +84,8 @@ export const createTree = (html, Components) => {
       parent = stack[stack.length - 1]
       continue
     }
-    const node = createNode(element, Components)
+    
+    const node = createNode(element, components)
     
     if (isSelfCloseElement(element) || isTextNode(element)) {
       parent.props.children.push(node)

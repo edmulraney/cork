@@ -10,36 +10,18 @@ function reconcile(root) {
   if (Array.isArray(root)) {
     return root.map((child) = reconcile(child))
   }
-    console.log(root, type)
+    console.log({root, type})
   const Comp = typeof type === 'string' ? root : type(root.props)
   if (Comp.props && Comp.props.children) {
     Comp.props.children.forEach((child, idx) => {
-      if (typeof child.type !== 'string') {
+      if (typeof child.type === 'function') {
         Comp.props.children[idx] = reconcile(Comp.props.children[idx])
       }
     })
   }
   return Comp
 }
-
-const render = (root1, container) => {
-  depth++
-  console.log('render', root1)
-  // debugger
-  const tree = depth === 1 ? createTree(root1) : root1
-  // debugger
-  console.log('render tree', tree)
-  const root = reconcile(tree)
-  // const root =tree
-
-  // if (typeof root.type === 'function') {
-  //   console.log('RENDERING COMPONENT')
-  //   // const cx = (root.type(root.props))
-  //   // console.log({cx})
-  //   // return render(cx, container)
-  //   root = root.type(root.props)
-  // }
-  console.log('past root type', root)
+const createDom = root => {
   const domElement =
     root.type == 'text'
       ? document.createTextNode('')
@@ -59,11 +41,25 @@ const render = (root1, container) => {
     domElement.addEventListener(type, root.props[evt])
   })
 
-  if (depth === 1) {
-    console.log('render', JSON.stringify(root, null, 2), root)
-  }
   root.props.children.forEach(child => render(child, domElement))
-  container.appendChild(domElement)
+  return domElement
+}
+const render = (root1, container) => {
+  depth++
+  console.log('render', root1)
+  const tree = createTree(root1)
+  console.log('render tree', tree)
+  const root = reconcile(tree)
+
+  // if (typeof root.type === 'function') {
+  //   console.log('RENDERING COMPONENT')
+  //   // const cx = (root.type(root.props))
+  //   // console.log({cx})
+  //   // return render(cx, container)
+  //   root = root.type(root.props)
+  // }
+  const dom = createDom(root)
+  container.appendChild(dom)
 }
 
 const toStatic = (statics, dynamics) => {
@@ -81,7 +77,6 @@ const toStatic = (statics, dynamics) => {
     //     result += dynamicPart.map(dynamicPat.type(dynamicPart.props))
     //   }
     // }
-
     if (staticPart.endsWith('="')) {
       console.log('toStatic', 'dynamic prop', {staticPart, dynamicPart})
       const propIndex = internal.addProp(dynamicPart)
@@ -95,28 +90,42 @@ const toStatic = (statics, dynamics) => {
       result += dynamicPart.join('')
     }
   }
-  console.log({result})
+  console.log({result, dynamics})
   return result
 }
 
 const html = (statics, ...dynamics) => {
-  const parsed = toStatic(statics, dynamics)
-  console.log('html', parsed, hasComponent(parsed))
-  return (parsed)
+  let parsed = toStatic(statics, dynamics)
+  console.log('html parsed', parsed, hasComponent(parsed))
+  if (hasComponent(parsed)) {
+    return (...Components) => {
+      console.log('hasCompoennt1')
+      const components = Components.reduce((factories, factory) => ({ ...factories, [factory.name]: factory } ), {})
+      parsed.__proto__.components = parsed.__proto__.components || []
+      parsed.__proto__.components[parsed.__proto__.components.length] = components
+      parsed = `__components__[${parsed.__proto__.components.length-1}]${parsed}`
+      return parsed
+    }
+  }
+  return parsed
 }
 
-const html2 = (statics, ...dynamics) => (...Components) => {
-  const parsed = toStatic(statics, dynamics)
-  const components = Components.reduce((factories, factory) => ({ ...factories, [factory.name]: factory } ), {})
-  console.log('html2', {components})
-  return createTree(parsed, components)
-}
+// const html2 = (statics, ...dynamics) => (...Components) => {
+//   const parsed = toStatic(statics, dynamics)
+//   const components = Components.reduce((factories, factory) => ({ ...factories, [factory.name]: factory } ), {})
+//   console.log('html2', {components})
+//   return createTree(parsed, components)
+// }
 
 // function Title (props) { return html`<h1>${props.children}</h1>` }
 // function Title2 (props) { return html`<h1 onClick="${() => console.log(123)}" id="a" id2="asdf">${props.title}</h1>` }
-
-const test = html`<ul>${[1,2,3].map(x => html`<li>${x}</li>`)}</ul>`
-// console.log(test)
+const MyUl = props => {
+  console.log('CHILDREN1', props.children)
+  return html`<ul>${props.children}</ul>`
+}
+// const test = html`<ul>${[1,2,3].map(x => html`<li>${x}</li>`)}</ul>`
+const test = html`<MyUl>${[1,2,3].map(x => html`<li>${x}</li>`)}</MyUl>`(MyUl)
+console.log({test})
 render(test, document.getElementById('app'))
 
 // const TodoItem = props => {
