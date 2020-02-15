@@ -2,7 +2,7 @@ const elementRegex = /(<[^>]+>)/g
 const getElements = str => str.split(elementRegex).filter(x => x !== '')
 const isTextNode = element => element !== null && element.indexOf('<') === -1
 const isCloseElement = element => element.indexOf('</') !== -1
-const isOpenElement = element => element.indexOf('>') !== -1 && element.indexOf('/>') === -1
+const isOpenElement = element => (element.indexOf('<') !== -1 && (element.indexOf('<') !== -1 || element.indexOf(' ') !== -1)) && element.indexOf('/>') === -1
 const isSelfCloseElement = element => element !== null && element.indexOf('/>') !== -1
 const isComponent = element => element !== null && /(<[A-Z])/.test(element)
 const hasComponent = html => /(<[A-Z])/.test(html)
@@ -72,26 +72,17 @@ const h = (statics, ...dynamics) => {
 }
 
 function reconcile(root) {
-  // debugger
   const type = root.type
   if (Array.isArray(root)) {
     return root.map((child) = reconcile(child))
   }
-  console.log('asdf', type, root)
-  // debugger
-  // const Comp = typeof type === 'string' ? root : createTree(type(root.props))
-  const Comp22 = typeof type === 'string' ? root : type(root.props)
-  const Comp = typeof type === 'string' ? root : createTree(type(root.props))
-  console.log('Comp22', Comp22)
-  console.log('Compaa', Comp)
-  if (Comp.props && Comp.props.children) {
-    Comp.props.children.forEach((child, idx) => {
-      // if (typeof child.type === 'function') {
-        Comp.props.children[idx] = reconcile(Comp.props.children[idx])
-      // }
+  const nextRoot = typeof type === 'string' ? root : createTree(type(root.props))
+  if (nextRoot.props && nextRoot.props.children) {
+    nextRoot.props.children.forEach((child, idx) => {
+      nextRoot.props.children[idx] = reconcile(nextRoot.props.children[idx])
     })
   }
-  return Comp
+  return nextRoot
 }
 
 const createDom = root => {
@@ -119,6 +110,7 @@ const createDom = root => {
   return domElement
 }
 const hasDynamicChildren = part => Array.isArray(part) && part[0].type !== undefined
+const getHtml = () => {}
 const createTree = fragmentRoot => {
   // debugger
   const rootElement = { type: 'root', props: { children: [] } }
@@ -135,22 +127,26 @@ const createTree = fragmentRoot => {
       const isLastElement = elementIndex === elements.length
       let isDynamicTextNode = false
       let node
+      console.log('element', element)
       if (isCloseElement(element)) {
         console.log('closing', element)
         stack.pop()
         parent = stack[stack.length - 1]
       }
       else if (isSelfCloseElement(element) || isTextNode(element)) {
+        console.log('isSelfClose')
         node = createNode(element, fragmentRoot.components)
         parent.props.children.push(node)
       }
       else if (isOpenElement(element)) {
+        console.log('isOpen')
         node = createNode(element, fragmentRoot.components)
         console.log('opening', element)
         console.log('dynamicPart', dynamicPart)
         parent.props.children.push(node)
         stack.push(node) 
       }
+      console.log('narp')
 
       if (isLastElement && dynamicPart !== undefined) {
         if (hasDynamicChildren(dynamicPart)) {
@@ -184,9 +180,10 @@ const render = (fragment, container) => {
 // console.log('tree', createTree(result))
 
 
-const Ul = props => h`<ul>${props.children}</ul>`
-const Li = props => h`<li>${props.children}</li>`
+// const Ul = props => h`<ul>${props.children}</ul>`
+// const Li = props => h`<li>${props.children}</li>`
 // const TodoApp = () => {}, TodoList = () => {}, Title = () => {}
-const result = h`<Ul><b>${[1].map(x => h`<Li>${x}</Li>`(Li))}</b><h1>a</h1></Ul>`(Ul)
+// const result = h`<Ul><b>${[1].map(x => h`<Li>${x}</Li>`(Li))}</b><h1>a</h1></Ul>`(Ul)
+const result = h`<button id="${1}" onclick="${e => console.log('hihi')}">Hey what up</button>`
 // const result2 = h`<TodoApp><TodoList><Title>${'hello'}</Title></TodoList></TodoApp>`(TodoApp, TodoList,Title)
 render(result, document.getElementById('app'))
