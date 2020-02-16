@@ -2,6 +2,8 @@ import { html } from './html'
 import { createTree } from './create-tree'
 import * as mocks from './create-tree.test.expectations'
 
+const debug = tree => console.log(JSON.stringify(tree, null, 2))
+
 describe('createTree', () => {
   it('prevents single nested child fragments', () => {
     // we dont want devs to nest inline html declarations, they should be declared as one fragment
@@ -56,5 +58,24 @@ describe('createTree', () => {
     const expected = mocks.CHILD_COMPONENT_ARRAY(CustomUl, CustomLi)
     expect(result).toStrictEqual(expected)
   })
+
+  it('handles dynamic element props', () => {
+    const onClick = e => onClick('foo')
+    const spec = html`<button id="${1}" onclick="${onClick}">Foo and ${'bar'} :)</button>`
+    const result = createTree(spec)
+    const expected = mocks.DYNAMIC_ELEMENT_PROPS(onClick)
+    expect(result).toEqual(expected)
+  })
+
+  it('handles static element props', () => {})
+
+  it('handles static and dynamic element props', () => {})
+
+  it('handles static component props', () => {})
+
+  it('handles dynamic component props', () => {})
+
+  it('handles static and dynamic component props', () => {})
+
 
 })

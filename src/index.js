@@ -11,12 +11,14 @@ import { render } from './dom.js'
 // <h1>foo</h1>
 // </ul>`
 // const result = html`<ul><b>${[1,2,3].map(x => html`<li>${x}</li>`)}</b><h1>a</h1></ul>`
-// const result = html`<button id="${1}" onclick="${e => console.log('hihi')}">Hey and ${'what'} up</button>`
-// const result2 = html`<TodoApp><TodoList><Title>${'hello'}</Title></TodoList></TodoApp>`(TodoApp, TodoList,Title)
+// // const result = html`<button id="${1}" onclick="${e => console.log('hihi')}">Hey and ${'what'} up</button>`
+// // const result2 = html`<TodoApp><TodoList><Title>${'hello'}</Title></TodoList></TodoApp>`(TodoApp, TodoList,Title)
 
-const CustomH1 = props => html`<h1>${props.children}</h1>`
-const spec = html`
-  <div>
-    <CustomH1>foo</CustomH1>
-  </div>`(CustomH1)
+// const CustomH1 = props => html`<h1>${props.children}</h1>`
+// const spec = html`
+//   <div>
+//     <CustomH1>foo</CustomH1>
+//   </div>`(CustomH1)
+const spec = html`<button id="${1}" onclick="${e => onClick('foo')}">Foo and ${'bar'} :)</button>`
+
 render(spec, document.getElementById('app'))

@@ -1,5 +1,5 @@
 const htmlRegex = /(<[^>]+>|">)/
-const getHtml = str => str.split(htmlRegex).map(x => x.trim()).filter(x => x !== '')
+const getHtml = str => str.split(htmlRegex).filter(x => x.trim() !== '')
 const isTextNode = html => html.indexOf('="') === -1 && html.indexOf('<') === -1 && html.indexOf('>') === -1
 const isCloseElement = element => element.indexOf('</') !== -1
 const isOpenElement = element => element.indexOf('<') !== -1 && element.indexOf('/>') === -1 && element.indexOf('</') === -1
