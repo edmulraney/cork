@@ -15,7 +15,8 @@ const getElementName = html => {
 }
 
 const getProps = (html, dynamicPropValue) => {
-  const attributes = html.substring(html.indexOf(' ') + 1, html.lastIndexOf('"') + 1)
+  const cleanHtml = html.trim()
+  const attributes = cleanHtml.substring(cleanHtml.indexOf(' ') + 1, cleanHtml.lastIndexOf('"') + 1)
   const propsArray = attributes.split(/="([^"]+|$)"? ?/)
   propsArray.pop()
   propsArray.pop() // remove empty last two items due to regex?
@@ -32,6 +33,7 @@ const getProps = (html, dynamicPropValue) => {
 
 const createNode = (element, Components) => {
   const props = isTextNode(element) ? ({ nodeValue: element }) : getProps(element)
+  console.log('createNode', element, props)
   if (isComponent(element) && Components && Components[getElementName(element)]) {
     return {
       debug: element,
@@ -59,6 +61,7 @@ const hasDynamicChildren = part => Array.isArray(part) && part[0] && part[0].typ
 const createTree = fragment => {
   const rootElement = { type: 'root', props: { children: [] } }
   const stack = [rootElement]
+  console.log(rootElement)
   fragment.statics.forEach((staticPart, index) => {
     let dynamicPart = fragment.dynamics[index]
     const html = getHtml(staticPart)
@@ -79,6 +82,7 @@ const createTree = fragment => {
         parent.props.children.push(node)
       }
       else if (isOpenElement(htmlPart)) {
+        console.log('opening', htmlPart)
         node = createNode(htmlPart, fragment.components)
         parent.props.children.push(node)
         stack.push(node)

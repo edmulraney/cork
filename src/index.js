@@ -21,12 +21,9 @@ import { render } from './dom.js'
 //   </div>`(CustomH1)
 // const spec = html`<button id="${1}" onclick="${e => onClick('foo')}">Foo and ${'bar'} :)</button>`
 
-const TodoItem = props => {
-  return html`<li>${props.todo.title}</li>`
-}
+const TodoItem = props => html`<li>${props.todo.title}</li>`
 
 const TodoList = props => {
-  props.todos = [{title: 'todo1'}]
   return html`
     <ul>
       ${props.todos.map(todo => html`<TodoItem todo="${todo}" />`(TodoItem))}
