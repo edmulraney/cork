@@ -1,9 +1,11 @@
-const elementRegex = /(<[^>]+>)/g
-const getElements = str => str.split(elementRegex).filter(x => x !== '')
-const isTextNode = element => element !== null && element.indexOf('<') === -1
+const htmlRegex = /(<[^>]+>|">)/
+const getHtml = str => str.split(htmlRegex).filter(x => x !== '')
+const isTextNode = html => html.indexOf('="') === -1 && html.indexOf('<') === -1 && html.indexOf('>') === -1
 const isCloseElement = element => element.indexOf('</') !== -1
-const isOpenElement = element => (element.indexOf('<') !== -1 && (element.indexOf('<') !== -1 || element.indexOf(' ') !== -1)) && element.indexOf('/>') === -1
-const isSelfCloseElement = element => element !== null && element.indexOf('/>') !== -1
+const isOpenElement = element => element.indexOf('<') !== -1 && element.indexOf('/>') === -1 && element.indexOf('</') === -1
+const isSelfCloseElement = element => element.indexOf('/>') !== -1
+const hasProp = html => html.indexOf('="') !== -1 
+
 const isComponent = element => element !== null && /(<[A-Z])/.test(element)
 const hasComponent = html => /(<[A-Z])/.test(html)
 const getElementName = str => {
@@ -12,19 +14,19 @@ const getElementName = str => {
   return str.replace(/[><\/]/g, '').substring(0, hasSpace ? spaceIndex - 1 : str.length)
 }
 
-const getProp = prop => {
-  if (prop.indexOf(`props[`) !== -1) {
-    const propIndex = prop.substring(prop.indexOf('[') + 1, prop.indexOf([']']))
-    return internal.props[propIndex]
-  }
-  return prop
-}
-const getProps = element => {
-  const attributes = element.substring(element.indexOf(' ') + 1, element.lastIndexOf('"') + 1)
-  const propsArray = attributes.split(/\="([^"]+)"/)
-  propsArray.pop() // remove empty last item
+const getProps = (html, dynamicPropValue) => {
+  const attributes = html.substring(html.indexOf(' ') + 1, html.lastIndexOf('"') + 1)
+  const propsArray = attributes.split(/="([^"]+|$)"? ?/)
+  propsArray.pop()
+  propsArray.pop() // remove empty last two items due to regex?
   const props = {}
-  propsArray.forEach((prop, index) => (index % 2 === 0) && (props[prop.trim()] = getProp(propsArray[index + 1])))
+  for (let propsIndex = 0; propsIndex < propsArray.length; propsIndex += 2) {
+    const prop = propsArray[propsIndex]
+    const isLastProp = propsIndex === propsArray.length - 1
+      props[prop] = isLastProp
+        ? props[prop] = dynamicPropValue
+        : propsArray[propsIndex + 1]
+  }
   return props
 }
 
@@ -50,25 +52,6 @@ const createNode = (element, Components) => {
     }
   }
   return node
-}
-
-const h = (statics, ...dynamics) => {
-  if (!hasComponent(statics.join(''))) {
-    return {
-      type: 'fragment',
-      statics,
-      dynamics,
-      components: null,
-    }
-  }
-  return (...components) => {
-    return {
-      type: 'fragment',
-      statics,
-      dynamics,
-      components: components.reduce((xs, x) => ({...xs, [x.name]: x }), {})
-    }
-  }
 }
 
 function reconcile(root) {
@@ -110,64 +93,79 @@ const createDom = root => {
   return domElement
 }
 const hasDynamicChildren = part => Array.isArray(part) && part[0].type !== undefined
-const getHtml = () => {}
-const createTree = fragmentRoot => {
-  // debugger
+
+export const createTree = fragment => {
   const rootElement = { type: 'root', props: { children: [] } }
   const stack = [rootElement]
-  console.log('fragmentRoot.static', fragmentRoot)
-  fragmentRoot.statics.forEach((staticPart, partIndex) => {
-    let dynamicPart = fragmentRoot.dynamics[partIndex]
-    console.log({ staticPart, dynamicPart })
-    let elementIndex = 0
-    const elements = getElements(staticPart)
-    while (elementIndex !== elements.length) {
+  console.log('started createTree', {fragment, stack})
+  fragment.statics.forEach((staticPart, index) => {
+    let dynamicPart = fragment.dynamics[index]
+    console.log('createTree', {fragment, staticPart, dynamicPart})
+    const html = getHtml(staticPart)
+    let htmlIndex = 0
+    while (htmlIndex < html.length) {
+      const htmlPart = html[htmlIndex++]
       let parent = stack[stack.length - 1]
-      const element = elements[elementIndex++]
-      const isLastElement = elementIndex === elements.length
-      let isDynamicTextNode = false
-      let node
-      console.log('element', element)
-      if (isCloseElement(element)) {
-        console.log('closing', element)
-        stack.pop()
-        parent = stack[stack.length - 1]
-      }
-      else if (isSelfCloseElement(element) || isTextNode(element)) {
-        console.log('isSelfClose')
-        node = createNode(element, fragmentRoot.components)
-        parent.props.children.push(node)
-      }
-      else if (isOpenElement(element)) {
-        console.log('isOpen')
-        node = createNode(element, fragmentRoot.components)
-        console.log('opening', element)
-        console.log('dynamicPart', dynamicPart)
-        parent.props.children.push(node)
-        stack.push(node) 
-      }
-      console.log('narp')
+      const isLastElement = htmlIndex === html.length
+      const isDynamicTextNode = typeof dynamicPart === 'string' || typeof dynamicPart === 'number'
 
-      if (isLastElement && dynamicPart !== undefined) {
-        if (hasDynamicChildren(dynamicPart)) {
-          console.log('hasDynamicCHildren', element)
-          dynamicPart.forEach(part => {
-            if (part.type === 'fragment') { // our part could be fragment or it could be a tree... (reconciliation)
-              node.props.children.push(createTree(part))
-            }
-            else { // our part could be fragment or it could be a tree... (reconciliation)
-              node.props.children.push(part)
-            }
-          })
+      let node
+      console.log('htmlPart', htmlPart, {parent})
+      if (isCloseElement(htmlPart)) {
+        console.log('closing', htmlPart, stack.length, parent)
+        console.log(stack[stack.length-1])
+        stack.pop()
+        console.log(stack[stack.length-1])
+        console.log(stack[stack.length-2])
+        parent = stack[stack.length - 1]
+        console.log('closing new parent', parent)
+      }
+      else if (isSelfCloseElement(htmlPart) || isTextNode(htmlPart)) {
+        console.log('self-closing or text node', htmlPart)
+        node = createNode(htmlPart, fragment.components)
+        parent.props.children.push(node)
+      }
+      else if (isOpenElement(htmlPart)) {
+        console.log('opening', htmlPart, parent)
+        node = createNode(htmlPart, fragment.components)
+        parent.props.children.push(node)
+        stack.push(node)
+      }
+
+      if (hasProp(htmlPart)) {
+        const props = getProps(htmlPart, dynamicPart)
+        console.log({props, node})
+        if (node) {
+          node.props = {
+            ...node.props,
+            ...props,
+          }
+        } else {
+          parent.props = {
+            ...parent.props,
+            ...props,
+          }
         }
-        else if (isDynamicTextNode = typeof dynamicPart === 'string' || typeof dynamicPart === 'number') {
-          elements.splice(elementIndex, 0, String(dynamicPart)) // insert it as next element to process
-          dynamicPart = undefined // reset dynamicPart as we're about to process it as the next element
-        }
+      }
+      else if (isLastElement && dynamicPart !== undefined && hasDynamicChildren(dynamicPart)) {
+        console.log('hasDynamicCHildren', htmlPart)
+        dynamicPart.forEach(part => {
+          if (part.type === 'fragment') { // our part could be fragment or it could be a tree... (reconciliation)
+            node.props.children.push(createTree(part))
+          }
+          else { // our part could be fragment or it could be a tree... (reconciliation)
+            node.props.children.push(part)
+          }
+        })
+      }
+      else if (isLastElement && isDynamicTextNode) {
+        console.log('adding', dynamicPart, 'as next static')
+        html.splice(htmlIndex, 0, String(dynamicPart)) // insert it as next htmlPart to process
+        dynamicPart = undefined // reset dynamicPart as we're about to process it as the next htmlPart
       }
     }
   })
-  console.log({fragmentRoot, stack})
+  console.log('finished createTree', {fragment, stack})
   return stack[0].props.children[0]
 }
 
@@ -180,10 +178,11 @@ const render = (fragment, container) => {
 // console.log('tree', createTree(result))
 
 
-// const Ul = props => h`<ul>${props.children}</ul>`
-// const Li = props => h`<li>${props.children}</li>`
+const Ul = props => h`<ul>${props.children}</ul>`
+const Li = props => h`<li>${props.children}</li>`
 // const TodoApp = () => {}, TodoList = () => {}, Title = () => {}
-// const result = h`<Ul><b>${[1].map(x => h`<Li>${x}</Li>`(Li))}</b><h1>a</h1></Ul>`(Ul)
-const result = h`<button id="${1}" onclick="${e => console.log('hihi')}">Hey what up</button>`
+const result = h`<Ul><b>${[1,2,3].map(x => h`<Li>${x}</Li>`(Li))}</b><h1>a</h1></Ul>`(Ul)
+// const result = h`<ul><b>${[1,2,3].map(x => h`<li>${x}</li>`)}</b><h1>a</h1></ul>`
+// const result = h`<button id="${1}" onclick="${e => console.log('hihi')}">Hey and ${'what'} up</button>`
 // const result2 = h`<TodoApp><TodoList><Title>${'hello'}</Title></TodoList></TodoApp>`(TodoApp, TodoList,Title)
 render(result, document.getElementById('app'))
