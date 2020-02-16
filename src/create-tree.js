@@ -7,10 +7,11 @@ const isSelfCloseElement = element => element.indexOf('/>') !== -1
 const hasProp = html => html.indexOf('="') !== -1 
 
 const isComponent = element => /(<[A-Z])/.test(element)
-const getElementName = str => {
-  const spaceIndex = str.indexOf(' ')
+const getElementName = html => {
+  const cleanHtml = html.trim()
+  const spaceIndex = cleanHtml.indexOf(' ')
   const hasSpace = spaceIndex !== -1
-  return str.replace(/[><\/]/g, '').substring(0, hasSpace ? spaceIndex - 1 : str.length)
+  return cleanHtml.replace(/[><\/]/g, '').substring(0, hasSpace ? spaceIndex - 1 : cleanHtml.length)
 }
 
 const getProps = (html, dynamicPropValue) => {
@@ -53,7 +54,7 @@ const createNode = (element, Components) => {
   return node
 }
 
-const hasDynamicChildren = part => Array.isArray(part) && part[0].type !== undefined
+const hasDynamicChildren = part => Array.isArray(part) && part[0] && part[0].type !== undefined
 
 const createTree = fragment => {
   const rootElement = { type: 'root', props: { children: [] } }

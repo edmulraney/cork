@@ -19,6 +19,36 @@ import { render } from './dom.js'
 //   <div>
 //     <CustomH1>foo</CustomH1>
 //   </div>`(CustomH1)
-const spec = html`<button id="${1}" onclick="${e => onClick('foo')}">Foo and ${'bar'} :)</button>`
+// const spec = html`<button id="${1}" onclick="${e => onClick('foo')}">Foo and ${'bar'} :)</button>`
 
-render(spec, document.getElementById('app'))
+const TodoItem = props => {
+  return html`<li>${props.todo.title}</li>`
+}
+
+const TodoList = props => {
+  props.todos = [{title: 'todo1'}]
+  return html`
+    <ul>
+      ${props.todos.map(todo => html`<TodoItem todo="${todo}" />`(TodoItem))}
+    </ul>`
+}
+
+const TodoFeature = props => {
+  const todos = [{title: 'test123'}]
+  return html`
+    <div>
+      <div>Todos</div>
+      <TodoList todos="${todos}" />
+    </div>
+  `(TodoList)
+}
+
+const App = props => {
+  return html`
+    <div>
+      <div>AppTitle</div>
+      <TodoFeature />
+    </div>
+  `(TodoFeature)
+}
+render(html`<App/>`(App), document.getElementById('app'))
