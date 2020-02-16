@@ -54,7 +54,6 @@ describe('createTree', () => {
       </CustomUl>`(CustomUl)
     const result = createTree(spec)
     const expected = mocks.CHILD_COMPONENT_ARRAY(CustomUl, CustomLi)
-    console.log(JSON.stringify(result, null, 2))
     expect(result).toStrictEqual(expected)
   })
 
