@@ -31,7 +31,7 @@ const TodoList = props => {
 }
 
 const TodoFeature = props => {
-  const todos = [{title: 'test123'}]
+  const todos = [{title: 'test123'}, {title: 'foobar'}]
   return html`
     <div>
       <div>Todos</div>

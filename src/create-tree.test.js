@@ -3,6 +3,7 @@ import { createTree } from './create-tree'
 import * as mocks from './create-tree.test.expectations'
 
 const debug = tree => console.log(JSON.stringify(tree, null, 2))
+// TODO: make these snapshots instead so you dont have to store expectations
 
 describe('createTree', () => {
   it('prevents single nested child fragments', () => {
@@ -13,14 +14,7 @@ describe('createTree', () => {
       </div>
     `
     const result = createTree(spec)
-    const expected = {
-      debug: '<div>',
-      type: 'div',
-      props: {
-        children: [],
-      },
-    }
-    expect(result).toStrictEqual(expected)
+    expect(result).toMatchSnapshot()
   })
 
   it('handles correct ordering of nested children', () => {
@@ -32,8 +26,7 @@ describe('createTree', () => {
     `
 
     const result = createTree(spec)
-    const expected = mocks.ORDERED_NESTED_CHILDREN
-    expect(result).toStrictEqual(expected)
+    expect(result).toMatchSnapshot()
   })
 
   it('handles child component', () => {
@@ -43,8 +36,7 @@ describe('createTree', () => {
         <CustomH1>foo</CustomH1>
       </div>`(CustomH1)
     const result = createTree(spec)
-    const expected = mocks.CHILD_COMPONENT(CustomH1)
-    expect(result).toStrictEqual(expected)
+    expect(result).toMatchSnapshot()
   })
 
   it('handles child component array', () => {
@@ -55,16 +47,14 @@ describe('createTree', () => {
         <b>${[1, 2, 3].map(x => html`<CustomLi>${x}</CustomLi>`(CustomLi))}</b>
       </CustomUl>`(CustomUl)
     const result = createTree(spec)
-    const expected = mocks.CHILD_COMPONENT_ARRAY(CustomUl, CustomLi)
-    expect(result).toStrictEqual(expected)
+    expect(result).toMatchSnapshot()
   })
 
   it('handles dynamic element props', () => {
     const onClick = e => onClick('foo')
     const spec = html`<button id="${1}" onclick="${onClick}">Foo and ${'bar'} :)</button>`
     const result = createTree(spec)
-    const expected = mocks.DYNAMIC_ELEMENT_PROPS(onClick)
-    expect(result).toEqual(expected)
+    expect(result).toMatchSnapshot()
   })
 
   it('handles static element props', () => {})

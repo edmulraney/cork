@@ -1,0 +1,225 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`createTree handles child component 1`] = `
+Object {
+  "debug": "<div>",
+  "props": Object {
+    "children": Array [
+      Object {
+        "debug": "<CustomH1>",
+        "props": Object {
+          "children": Array [
+            Object {
+              "debug": "foo",
+              "props": Object {
+                "children": Array [],
+                "nodeValue": "foo",
+              },
+              "type": "text",
+            },
+          ],
+        },
+        "type": [Function],
+      },
+    ],
+  },
+  "type": "div",
+}
+`;
+
+exports[`createTree handles child component array 1`] = `
+Object {
+  "debug": "<CustomUl>",
+  "props": Object {
+    "children": Array [
+      Object {
+        "debug": "<b>",
+        "props": Object {
+          "children": Array [
+            Object {
+              "debug": "<CustomLi>",
+              "props": Object {
+                "children": Array [
+                  Object {
+                    "debug": "1",
+                    "props": Object {
+                      "children": Array [],
+                      "nodeValue": "1",
+                    },
+                    "type": "text",
+                  },
+                ],
+              },
+              "type": [Function],
+            },
+            Object {
+              "debug": "<CustomLi>",
+              "props": Object {
+                "children": Array [
+                  Object {
+                    "debug": "2",
+                    "props": Object {
+                      "children": Array [],
+                      "nodeValue": "2",
+                    },
+                    "type": "text",
+                  },
+                ],
+              },
+              "type": [Function],
+            },
+            Object {
+              "debug": "<CustomLi>",
+              "props": Object {
+                "children": Array [
+                  Object {
+                    "debug": "3",
+                    "props": Object {
+                      "children": Array [],
+                      "nodeValue": "3",
+                    },
+                    "type": "text",
+                  },
+                ],
+              },
+              "type": [Function],
+            },
+          ],
+        },
+        "type": "b",
+      },
+    ],
+  },
+  "type": [Function],
+}
+`;
+
+exports[`createTree handles correct ordering of nested children 1`] = `
+Object {
+  "debug": "<ul>",
+  "props": Object {
+    "children": Array [
+      Object {
+        "debug": "<b>",
+        "props": Object {
+          "children": Array [
+            Object {
+              "debug": "<li>",
+              "props": Object {
+                "children": Array [
+                  Object {
+                    "debug": "1",
+                    "props": Object {
+                      "children": Array [],
+                      "nodeValue": "1",
+                    },
+                    "type": "text",
+                  },
+                ],
+              },
+              "type": "li",
+            },
+            Object {
+              "debug": "<li>",
+              "props": Object {
+                "children": Array [
+                  Object {
+                    "debug": "2",
+                    "props": Object {
+                      "children": Array [],
+                      "nodeValue": "2",
+                    },
+                    "type": "text",
+                  },
+                ],
+              },
+              "type": "li",
+            },
+            Object {
+              "debug": "<li>",
+              "props": Object {
+                "children": Array [
+                  Object {
+                    "debug": "3",
+                    "props": Object {
+                      "children": Array [],
+                      "nodeValue": "3",
+                    },
+                    "type": "text",
+                  },
+                ],
+              },
+              "type": "li",
+            },
+          ],
+        },
+        "type": "b",
+      },
+      Object {
+        "debug": "<h1>",
+        "props": Object {
+          "children": Array [
+            Object {
+              "debug": "foo",
+              "props": Object {
+                "children": Array [],
+                "nodeValue": "foo",
+              },
+              "type": "text",
+            },
+          ],
+        },
+        "type": "h1",
+      },
+    ],
+  },
+  "type": "ul",
+}
+`;
+
+exports[`createTree handles dynamic element props 1`] = `
+Object {
+  "debug": "<button id=\\"",
+  "props": Object {
+    "children": Array [
+      Object {
+        "debug": "Foo and ",
+        "props": Object {
+          "children": Array [],
+          "nodeValue": "Foo and ",
+        },
+        "type": "text",
+      },
+      Object {
+        "debug": "bar",
+        "props": Object {
+          "children": Array [],
+          "nodeValue": "bar",
+        },
+        "type": "text",
+      },
+      Object {
+        "debug": " :)",
+        "props": Object {
+          "children": Array [],
+          "nodeValue": " :)",
+        },
+        "type": "text",
+      },
+    ],
+    "id": 1,
+    "onclick": [Function],
+  },
+  "type": "button",
+}
+`;
+
+exports[`createTree prevents single nested child fragments 1`] = `
+Object {
+  "debug": "<div>",
+  "props": Object {
+    "children": Array [],
+  },
+  "type": "div",
+}
+`;

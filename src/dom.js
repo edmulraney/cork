@@ -1,14 +1,14 @@
 import { createTree } from './create-tree.js'
 
-const reconcile = root => {
+const expand = root => {
   const type = root.type
   if (Array.isArray(root)) {
-    return root.map((child) = reconcile(child))
+    return root.map((child) = expand(child))
   }
   const nextRoot = typeof type === 'string' ? root : createTree(type(root.props))
   if (nextRoot.props && nextRoot.props.children) {
     nextRoot.props.children.forEach((child, idx) => {
-      nextRoot.props.children[idx] = reconcile(nextRoot.props.children[idx])
+      nextRoot.props.children[idx] = expand(nextRoot.props.children[idx])
     })
   }
   return nextRoot
@@ -40,7 +40,7 @@ const createDom = root => {
 }
 
 const render = (fragment, container) => {
-  const root = reconcile(createTree(fragment))
+  const root = expand(createTree(fragment))
   console.log('render', {root})
   const dom = createDom(root)
   container.appendChild(dom)
