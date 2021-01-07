@@ -1,7 +1,7 @@
 # cork
 
 ## TLDR;
-> React without JSX or a compile step. aka a runtime React. Don't use :) this is an unfinished experiment.
+> React-style components without JSX or a compile step. aka a runtime React. Don't use :) this is an unfinished experiment.
 
 
 
