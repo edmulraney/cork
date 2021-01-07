@@ -12,7 +12,7 @@ const Title = props => html`<div>${props.children}</div>`
 
 const Button = props => {
   return html`
-    <button onClick="${e => console.log('hi native events')}">
+    <button onclick="${e => console.log('hi native events')}">
       ${props.children}
     </button>
   `
